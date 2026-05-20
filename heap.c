@@ -11,6 +11,10 @@ MaxHeap* criarHeap(int capacidade) {
     return heap;
 }
 
+int estaVazio(MaxHeap *heap) {
+    return heap->tamanho == 0;
+}
+
 // Define o critério de prioridade (Retorna 1 se 'a' tem mais prioridade que 'b')
 int temMaiorPrioridade(Adjacencias* a, Adjacencias* b) {
     if (a->sat != b->sat) {
@@ -93,6 +97,38 @@ Adjacencias* extrairMax(MaxHeap* heap) {
     heapifyDown(heap, 0);
 
     return raiz;
+}
+
+// Atualiza a prioridade de um elemento que já está no heap
+void atualizarPrioridade(MaxHeap* heap, Adjacencias* adj) {
+    int indice = -1;
+    
+    // Encontra o elemento dentro do array do heap
+    for (int i = 0; i < heap->tamanho; i++) {
+        if (heap->dados[i] == adj) {
+            indice = i;
+            break;
+        }
+    }
+
+    // Se o elemento já foi extraído ou não está no heap, encerra
+    if (indice == -1) {
+        return; 
+    }
+
+    // Reorganiza a árvore
+    // Como a prioridade pode ter aumentado ou diminuído, verificamos as duas direções.
+    
+    int pai = (indice - 1) / 2;
+    
+    // Tenta subir o elemento caso a prioridade tenha AUMENTADO
+    if (indice > 0 && temMaiorPrioridade(heap->dados[indice], heap->dados[pai])) {
+        heapifyUp(heap, indice);
+    } 
+    // Tenta descer o elemento caso a prioridade tenha DIMINUÍDO
+    else {
+        heapifyDown(heap, indice);
+    }
 }
 
 void liberarHeap(MaxHeap* heap) {

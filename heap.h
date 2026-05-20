@@ -9,9 +9,11 @@ typedef struct MaxHeap {
     int tamanho;
 } MaxHeap;
 
+int estaVazio(MaxHeap *heap);
 MaxHeap* criarHeap(int capacidade);
 void inserir(MaxHeap* heap, Adjacencias* adj);
 Adjacencias* extrairMax(MaxHeap* heap);
+void atualizarPrioridade(MaxHeap* heap, Adjacencias* adj);
 void liberarHeap(MaxHeap* heap);
 
 #endif
