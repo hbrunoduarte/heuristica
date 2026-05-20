@@ -2,12 +2,6 @@
 #include <stdlib.h>
 #include "heap.h"
 
-typedef struct MaxHeap {
-    Adjacencias** dados; // Array de ponteiros para Adjacencias do grafo
-    int capacidade;
-    int tamanho;
-} MaxHeap;
-
 // Inicializa o Heap
 MaxHeap* criarHeap(int capacidade) {
     MaxHeap* heap = (MaxHeap*)malloc(sizeof(MaxHeap));
