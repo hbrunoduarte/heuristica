@@ -22,16 +22,19 @@ void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v) {
     int *cores = calloc(g->numVertices, sizeof(int));
     
     Vertice *vizinho = v->head;
-    int qtdVizinhos = 0;
+    int qtdVizinhosColoridos = 0;
     while (vizinho != NULL) {
-        qtdVizinhos++;
-        cores[g->listaAdj[vizinho->indice].cor-1] = 1;
+        int cor = g->listaAdj[vizinho->indice].cor;
+        if (cor != 0) {
+            qtdVizinhosColoridos++;
+            cores[cor-1] = 1;
+        }
         vizinho = vizinho->proximo;
     }
 
     int satAntiga = v->sat;
     int novaSaturacao = 0;
-    for (int i = 0; i < g->numVertices && novaSaturacao < qtdVizinhos; i++)
+    for (int i = 0; i < g->numVertices && novaSaturacao < qtdVizinhosColoridos; i++)
         if (cores[i] == 1)
             novaSaturacao++;
     
@@ -57,7 +60,8 @@ int DSatur(Grafo *grafo) {
 
         Vertice *aux = v->head;
         while (aux != NULL) {
-            cores[grafo->listaAdj[aux->indice].cor - 1] = 1;
+            int cor = grafo->listaAdj[aux->indice].cor;
+            if (cor != 0) cores[cor-1] = 1;
             grafo->listaAdj[aux->indice].grau--;
             aux = aux->proximo;
         }
