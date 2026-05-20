@@ -19,27 +19,29 @@ int temVerticeSemCor(Grafo *g) {
 
 void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v, char *cores) {
     
-    // Cor de cada vizinho é lida e marcada
+    // Calcula-se a nova saturação
+    int satAntiga = v->sat;
+    int novaSaturacao = 0;
     Vertice *vizinho = v->head;
-    int qtdVizinhosColoridos = 0;
     while (vizinho != NULL) {
         int cor = g->listaAdj[vizinho->indice].cor;
-        if (cor != 0) {
-            qtdVizinhosColoridos++;
+        if (cor != 0 && cores[cor-1] == 0) {
+            novaSaturacao++;
             cores[cor-1] = 1;
         }
         vizinho = vizinho->proximo;
     }
-
-    // Calcula-se a nova saturação
-    int satAntiga = v->sat;
-    int novaSaturacao = 0;
-    for (int i = 0; i < g->numVertices && novaSaturacao < qtdVizinhosColoridos; i++)
-        if (cores[i] == 1)
-            novaSaturacao++;
-    
     v->sat = novaSaturacao;
-    memset(cores, 0, g->numVertices * sizeof(char)); // restaura o vetor auxiliar
+
+    // restaura o vetor de cores
+    vizinho = v->head;
+    while (vizinho != NULL) {
+        int cor = g->listaAdj[vizinho->indice].cor;
+        if (cor != 0) {
+            cores[cor-1] = 0;
+        }
+        vizinho = vizinho->proximo;
+    }
 
     // Atualiza o heap apenas se houve alteração
     if (novaSaturacao != satAntiga)
@@ -88,7 +90,13 @@ int DSatur(Grafo *grafo) {
             coresUtilizadas[v->cor-1] = 1;
         }
 
-        memset(cores, 0, grafo->numVertices * sizeof(char)); // restaura o vetor auxiliar
+        // restaura vetor auxiliar
+        aux = v->head;
+        while (aux != NULL) {
+            int cor = grafo->listaAdj[aux->indice].cor;
+            if (cor != 0) cores[cor-1] = 0;
+            aux = aux->proximo;
+        }
 
         // Atualiza a saturação de cada vizinho
         aux = v->head;
