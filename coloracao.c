@@ -17,7 +17,83 @@ int temVerticeSemCor(Grafo *g) {
     return g->verticesColoridos != g->numVertices;
 }
 
+void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v) {
 
+    int *cores = calloc(g->numVertices, sizeof(int));
+    
+    Vertice *vizinho = v->head;
+    int qtdVizinhos = 0;
+    while (vizinho != NULL) {
+        qtdVizinhos++;
+        cores[g->listaAdj[vizinho->indice].cor-1] = 1;
+        vizinho = vizinho->proximo;
+    }
+
+    int satAntiga = v->sat;
+    int novaSaturacao = 0;
+    for (int i = 0; i < g->numVertices && novaSaturacao < qtdVizinhos; i++)
+        if (cores[i] == 1)
+            novaSaturacao++;
+    
+    v->sat = novaSaturacao;
+    free(cores);
+
+    if (novaSaturacao != satAntiga)
+        atualizarPrioridade(heap, v);
+
+}
+
+int DSatur(Grafo *grafo) {
+
+    MaxHeap *heapVertices = criarHeap(grafo->numVertices);
+    for (int i = 0; i < grafo->numVertices; i++)
+        inserir(heapVertices, grafo->listaAdj + i);
+    
+    int *cores = calloc(grafo->numVertices, sizeof(int));
+
+    while (!estaVazio(heapVertices)) {
+
+        Adjacencias *v = extrairMax(heapVertices);
+
+        Vertice *aux = v->head;
+        while (aux != NULL) {
+            cores[grafo->listaAdj[aux->indice].cor - 1] = 1;
+            grafo->listaAdj[aux->indice].grau--;
+            aux = aux->proximo;
+        }
+
+        int i = 0;
+        for (; i < grafo->numVertices; i++)
+            if (cores[i] == 0)
+                break;
+            else cores[i] = 0;
+        
+        v->cor = i+1;
+
+        for (; i < grafo->numVertices; i++)
+            cores[i] = 0;
+
+        aux = v->head;
+        while (aux != NULL) {
+            atualizarSaturacao(grafo, heapVertices, &grafo->listaAdj[aux->indice]);
+            aux = aux->proximo;
+        }
+    }
+
+    int numCores = 0;
+    for (int i = 0; i < grafo->numVertices; i++) {
+        int posCor = grafo->listaAdj[i].cor - 1;
+        if (cores[posCor] == 0) {
+            cores[posCor] = 1;
+            numCores++;
+        }
+    }
+
+    free(cores);
+    liberarHeap(heapVertices);
+
+    return numCores;
+}
 
 void printaGrafo(Grafo* grafo, int printaCor) {
     printf("Lista de Adjacências: \n");
@@ -98,12 +174,13 @@ int main(int argc, char *argv[]) {
 
     Grafo *grafo = lerArquivo();
 
-    
+    int numCores = DSatur(grafo);
+
+    printf("\nGrafo colorido com %d cores\n\n", numCores);
+    printf("Está corretamente colorido? %s\n\n", estaBemColorido(grafo) ? "sim" : "não");
 
     escreveArquivo(grafo);
     // printaGrafo(grafo, 1);
-    
-    printf("Está corretamente colorido? %s\n", estaBemColorido(grafo) ? "sim" : "não");
 
     freeGrafo(grafo);
 
