@@ -15,6 +15,8 @@ typedef struct Vertice {
 
 typedef struct Adjacencias {
     int cor;
+    int sat;
+    int grau;
     Vertice* head;
 } Adjacencias;
 
