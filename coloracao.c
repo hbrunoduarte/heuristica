@@ -63,6 +63,7 @@ int DSatur(Grafo *grafo) {
             int cor = grafo->listaAdj[aux->indice].cor;
             if (cor != 0) cores[cor-1] = 1;
             grafo->listaAdj[aux->indice].grau--;
+            atualizarPrioridade(heapVertices, &grafo->listaAdj[aux->indice]);
             aux = aux->proximo;
         }
 
