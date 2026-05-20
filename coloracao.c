@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "heap.h"
 #include "coloracao.h"
@@ -16,10 +17,9 @@ int temVerticeSemCor(Grafo *g) {
     return g->verticesColoridos != g->numVertices;
 }
 
-void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v) {
-
-    int *cores = calloc(g->numVertices, sizeof(int));
+void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v, char *cores) {
     
+    // Cor de cada vizinho é lida e marcada
     Vertice *vizinho = v->head;
     int qtdVizinhosColoridos = 0;
     while (vizinho != NULL) {
@@ -31,6 +31,7 @@ void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v) {
         vizinho = vizinho->proximo;
     }
 
+    // Calcula-se a nova saturação
     int satAntiga = v->sat;
     int novaSaturacao = 0;
     for (int i = 0; i < g->numVertices && novaSaturacao < qtdVizinhosColoridos; i++)
@@ -38,8 +39,9 @@ void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v) {
             novaSaturacao++;
     
     v->sat = novaSaturacao;
-    free(cores);
+    memset(cores, 0, g->numVertices * sizeof(char)); // restaura o vetor auxiliar
 
+    // Atualiza o heap apenas se houve alteração
     if (novaSaturacao != satAntiga)
         atualizarPrioridade(heap, v);
 
@@ -47,16 +49,24 @@ void atualizarSaturacao(Grafo *g, MaxHeap *heap, Adjacencias *v) {
 
 int DSatur(Grafo *grafo) {
 
+    // Inserindo todos os vértices no heap
     MaxHeap *heapVertices = criarHeap(grafo->numVertices);
     for (int i = 0; i < grafo->numVertices; i++)
         inserir(heapVertices, grafo->listaAdj + i);
     
-    int *cores = calloc(grafo->numVertices, sizeof(int));
+    int numCores = 0;
+    // Vetor auxiliar para o cálculo do número total de cores usadas
+    char *coresUtilizadas = calloc(grafo->numVertices, sizeof(char));
+    
+    // Vetor booleano auxiliar de cores utilizadas em diferentes situações
+    char *cores = calloc(grafo->numVertices, sizeof(char));
 
     while (!estaVazio(heapVertices)) {
 
+        // Extrai vertice de maior saturacao
         Adjacencias *v = extrairMax(heapVertices);
 
+        // Cada vizinho tem sua cor lida e seu grau de subgrafo descolorido atualizado
         Vertice *aux = v->head;
         while (aux != NULL) {
             int cor = grafo->listaAdj[aux->indice].cor;
@@ -66,34 +76,30 @@ int DSatur(Grafo *grafo) {
             aux = aux->proximo;
         }
 
+        // Define-se a cor do vértice atual
         int i = 0;
         for (; i < grafo->numVertices; i++)
             if (cores[i] == 0)
                 break;
-            else cores[i] = 0;
         
         v->cor = i+1;
+        if (coresUtilizadas[v->cor-1] == 0) {
+            numCores++;
+            coresUtilizadas[v->cor-1] = 1;
+        }
 
-        for (; i < grafo->numVertices; i++)
-            cores[i] = 0;
+        memset(cores, 0, grafo->numVertices * sizeof(char)); // restaura o vetor auxiliar
 
+        // Atualiza a saturação de cada vizinho
         aux = v->head;
         while (aux != NULL) {
-            atualizarSaturacao(grafo, heapVertices, &grafo->listaAdj[aux->indice]);
+            atualizarSaturacao(grafo, heapVertices, &grafo->listaAdj[aux->indice], cores);
             aux = aux->proximo;
         }
     }
 
-    int numCores = 0;
-    for (int i = 0; i < grafo->numVertices; i++) {
-        int posCor = grafo->listaAdj[i].cor - 1;
-        if (cores[posCor] == 0) {
-            cores[posCor] = 1;
-            numCores++;
-        }
-    }
-
     free(cores);
+    free(coresUtilizadas);
     liberarHeap(heapVertices);
 
     return numCores;
@@ -170,8 +176,6 @@ void freeGrafo(Grafo *g) {
 
 int main(int argc, char *argv[]) {
     
-    srand(time(NULL));
-
     #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
     #endif
