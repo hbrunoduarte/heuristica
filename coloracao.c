@@ -17,63 +17,7 @@ int temVerticeSemCor(Grafo *g) {
     return g->verticesColoridos != g->numVertices;
 }
 
-void coloreGulosoAuxiliar(Grafo *grafo, int verticeAtual, int *paletaCores) {
 
-    Vertice *vAdj = grafo->listaAdj[verticeAtual].head;
-    while (vAdj) {
-        int corVizinho = grafo->listaAdj[vAdj->indice].cor;
-        if (corVizinho != 0) paletaCores[corVizinho-1] = 0;
-        vAdj = vAdj->proximo;
-    }
-
-    int corEscolhida = 1;
-    for (; corEscolhida < grafo->numVertices; corEscolhida++)
-        if (paletaCores[corEscolhida-1])
-            break;
-
-    grafo->listaAdj[verticeAtual].cor = corEscolhida;
-
-    vAdj = grafo->listaAdj[verticeAtual].head;
-    while (vAdj) {
-        int corVizinho = grafo->listaAdj[vAdj->indice].cor;
-        if (corVizinho != 0) paletaCores[corVizinho-1] = 1;
-        vAdj = vAdj->proximo;
-    }
-
-    grafo->verticesColoridos++;
-
-    Vertice *proxVertice = grafo->listaAdj[verticeAtual].head;
-    while (temVerticeSemCor(grafo) && proxVertice != NULL) {
-        if (grafo->listaAdj[proxVertice->indice].cor == 0)
-            coloreGulosoAuxiliar(grafo, proxVertice->indice, paletaCores);
-        proxVertice = proxVertice->proximo;
-    }
-}
-
-int coloreGuloso(Grafo *grafo, int vInicial) {
-
-    int *paletaCores = malloc(sizeof(int) * grafo->numVertices);
-    for (int i = 0; i < grafo->numVertices; i++)
-        paletaCores[i] = 1;
-
-    for (int i = (vInicial + 1) % grafo->numVertices; i != vInicial || temVerticeSemCor(grafo); i = (i+1) % grafo->numVertices)
-        if (grafo->listaAdj[i].cor == 0) {
-            coloreGulosoAuxiliar(grafo, i, paletaCores);
-            if (i == vInicial) break;
-        }
-        
-        
-    int numCores = 0;
-
-    for (int i = 0; i < grafo->numVertices && numCores < grafo->numVertices; i++) {
-        if (paletaCores[grafo->listaAdj[i].cor-1]) {
-            numCores++;
-            paletaCores[grafo->listaAdj[i].cor-1] = 0;
-        }
-    }
-
-    return numCores;
-}
 
 void printaGrafo(Grafo* grafo, int printaCor) {
     printf("Lista de Adjacências: \n");
@@ -106,6 +50,8 @@ Grafo* criaGrafo(int n) {
     for(int i = 0; i < n; i++) {
         grafo->listaAdj[i].head = NULL;
         grafo->listaAdj[i].cor = 0;
+        grafo->listaAdj[i].grau = 0;
+        grafo->listaAdj[i].sat = 0;
     }
         
     return grafo;
@@ -150,21 +96,9 @@ int main(int argc, char *argv[]) {
     SetConsoleOutputCP(CP_UTF8);
     #endif
 
-    Grafo *grafo;
-    grafo = lerArquivo();
+    Grafo *grafo = lerArquivo();
 
-    int numCores = grafo->numVertices;
-
-    // testa todos os vértices
-    for (int i = 0; i < grafo->numVertices && numCores != 1; i++) {
-        resetaCores(grafo);
-        int temp = coloreGuloso(grafo, i);
-        numCores = temp < numCores ? temp : numCores;
-    }
-
-    printf("\n-----------------------------------\n");
-    printf("Guloso: Grafo colorido com %d cores\n", numCores);
-    printf("-----------------------------------\n\n");
+    
 
     escreveArquivo(grafo);
     // printaGrafo(grafo, 1);

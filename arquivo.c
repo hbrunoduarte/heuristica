@@ -29,6 +29,7 @@ Grafo* lerArquivo() {
                 novaAdj->indice = vAdj;
                 novaAdj->proximo = g->listaAdj[v].head;
                 g->listaAdj[v].head = novaAdj;
+                g->listaAdj[v].grau++;
             }
             vAdj++;
         }
